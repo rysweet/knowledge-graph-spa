@@ -411,19 +411,53 @@ async function buildKnowledgeGraph(buildJob) {
     // Create sample knowledge nodes based on the topic and prompt
     const knowledgeNodes = await generateKnowledgeNodes(buildJob.topic, buildJob.prompt);
 
-    buildJob.currentStep = 'Creating knowledge nodes...';
+    buildJob.currentStep = 'Creating knowledge nodes and sources...';
     buildJob.progress = 60;
 
     let nodesCreated = 1; // Root node
     let edgesCreated = 0;
 
+    // First, create all unique source nodes
+    const uniqueSources = new Set();
+    knowledgeNodes.forEach(node => {
+      if (node.sources) {
+        node.sources.forEach(source => uniqueSources.add(source));
+      }
+    });
+
+    buildJob.currentStep = 'Creating source nodes...';
+    buildJob.progress = 50;
+
+    const sourceNodeIds = {};
+    for (const sourceName of uniqueSources) {
+      const sourceResult = await session.run(`
+        MERGE (s:SOURCE {name: $name})
+        ON CREATE SET
+          s.type = 'Reference',
+          s.created = datetime(),
+          s.topic = $topic
+        RETURN s, id(s) as sourceId
+      `, {
+        name: sourceName,
+        topic: buildJob.topic
+      });
+
+      sourceNodeIds[sourceName] = sourceResult.records[0].get('sourceId').toNumber();
+      nodesCreated++;
+      buildJob.logs.push({ timestamp: new Date(), message: `Created source: ${sourceName}` });
+    }
+
+    buildJob.currentStep = 'Creating concept nodes...';
+    buildJob.progress = 60;
+
     for (const nodeData of knowledgeNodes) {
-      // Create node
+      // Create node with enhanced properties
       const nodeResult = await session.run(`
         CREATE (n:CONCEPT {
           name: $name,
           type: $type,
           description: $description,
+          details: $details,
           topic: $topic,
           created: datetime()
         })
@@ -432,6 +466,7 @@ async function buildKnowledgeGraph(buildJob) {
         name: nodeData.name,
         type: nodeData.type,
         description: nodeData.description,
+        details: nodeData.details || nodeData.description,
         topic: buildJob.topic
       });
 
@@ -447,7 +482,22 @@ async function buildKnowledgeGraph(buildJob) {
 
       edgesCreated++;
 
-      buildJob.logs.push({ timestamp: new Date(), message: `Created node: ${nodeData.name} (${nodeData.type})` });
+      // Connect concept to its sources
+      if (nodeData.sources) {
+        for (const sourceName of nodeData.sources) {
+          const sourceId = sourceNodeIds[sourceName];
+          if (sourceId) {
+            await session.run(`
+              MATCH (concept) WHERE id(concept) = $conceptId
+              MATCH (source) WHERE id(source) = $sourceId
+              CREATE (concept)-[:SOURCED_FROM]->(source)
+            `, { conceptId: nodeId, sourceId });
+            edgesCreated++;
+          }
+        }
+      }
+
+      buildJob.logs.push({ timestamp: new Date(), message: `Created concept: ${nodeData.name} (${nodeData.type}) with ${nodeData.sources ? nodeData.sources.length : 0} sources` });
     }
 
     // Create relationships between concepts
@@ -503,36 +553,180 @@ async function generateKnowledgeNodes(topic, prompt) {
 
   const topicTemplates = {
     'COBOL': [
-      { name: 'IDENTIFICATION DIVISION', type: 'DIVISION', description: 'Program identification section' },
-      { name: 'DATA DIVISION', type: 'DIVISION', description: 'Data structure definitions' },
-      { name: 'PROCEDURE DIVISION', type: 'DIVISION', description: 'Program logic and procedures' },
-      { name: 'WORKING-STORAGE SECTION', type: 'SECTION', description: 'Variable declarations' },
-      { name: 'MOVE statement', type: 'STATEMENT', description: 'Data movement operation' },
-      { name: 'PERFORM statement', type: 'STATEMENT', description: 'Control flow operation' }
+      {
+        name: 'IDENTIFICATION DIVISION',
+        type: 'DIVISION',
+        description: 'Program identification section that contains metadata about the COBOL program including program name, author, date, and purpose.',
+        details: 'The IDENTIFICATION DIVISION is the first division in a COBOL program and provides essential program documentation.',
+        sources: ['IBM COBOL Language Reference', 'Enterprise COBOL Programming Guide']
+      },
+      {
+        name: 'DATA DIVISION',
+        type: 'DIVISION',
+        description: 'Defines all data structures, file descriptions, and working storage variables used in the program.',
+        details: 'Contains FILE SECTION for file descriptions, WORKING-STORAGE SECTION for program variables, and LINKAGE SECTION for parameter passing.',
+        sources: ['IBM COBOL Language Reference', 'COBOL Standard ISO/IEC 1989:2014']
+      },
+      {
+        name: 'PROCEDURE DIVISION',
+        type: 'DIVISION',
+        description: 'Contains the executable code and program logic using paragraphs and sections.',
+        details: 'This division contains all the statements that perform the actual processing of data. It is organized into paragraphs and sections.',
+        sources: ['IBM Enterprise COBOL Documentation', 'COBOL Programming Guide']
+      },
+      {
+        name: 'WORKING-STORAGE SECTION',
+        type: 'SECTION',
+        description: 'Declares variables that persist throughout program execution and retain their values between calls.',
+        details: 'Variables defined here are initialized once when the program starts and maintain their values throughout the program lifecycle.',
+        sources: ['IBM COBOL Language Reference', 'Micro Focus COBOL Documentation']
+      },
+      {
+        name: 'MOVE statement',
+        type: 'STATEMENT',
+        description: 'Transfers data from source to destination with automatic type conversion when compatible.',
+        details: 'The MOVE statement is one of the most frequently used statements in COBOL. It handles numeric, alphanumeric, and group moves with implicit conversions.',
+        sources: ['COBOL Language Specification', 'IBM Enterprise COBOL Reference']
+      },
+      {
+        name: 'PERFORM statement',
+        type: 'STATEMENT',
+        description: 'Executes paragraphs or sections either once or repetitively based on conditions.',
+        details: 'PERFORM provides structured programming capabilities including PERFORM UNTIL (loop), PERFORM TIMES (counted loop), and PERFORM VARYING (for loop).',
+        sources: ['IBM COBOL Language Reference', 'COBOL Control Flow Documentation']
+      }
     ],
     '.NET': [
-      { name: 'C# Language', type: 'LANGUAGE', description: 'Primary .NET programming language' },
-      { name: 'Common Language Runtime', type: 'RUNTIME', description: 'CLR execution environment' },
-      { name: 'Base Class Library', type: 'LIBRARY', description: 'Standard .NET libraries' },
-      { name: 'Garbage Collector', type: 'COMPONENT', description: 'Memory management system' },
-      { name: 'LINQ', type: 'FEATURE', description: 'Language Integrated Query' },
-      { name: 'ASP.NET Core', type: 'FRAMEWORK', description: 'Web application framework' }
+      {
+        name: 'C# Language',
+        type: 'LANGUAGE',
+        description: 'Modern, object-oriented programming language developed by Microsoft for the .NET platform.',
+        details: 'C# combines the power of C++ with the simplicity of Visual Basic. It supports strong typing, imperative, declarative, functional, generic, and component-oriented programming.',
+        sources: ['Microsoft C# Documentation', 'C# Language Specification', '.NET Foundation']
+      },
+      {
+        name: 'Common Language Runtime',
+        type: 'RUNTIME',
+        description: 'The virtual machine component of .NET that manages memory, executes code, and provides services.',
+        details: 'CLR provides memory management, exception handling, security, and garbage collection. It enables cross-language interoperability through Common Type System (CTS).',
+        sources: ['Microsoft CLR Documentation', '.NET Architecture Guide']
+      },
+      {
+        name: 'Base Class Library',
+        type: 'LIBRARY',
+        description: 'Comprehensive set of standard classes and functions available to all .NET languages.',
+        details: 'BCL includes collections, I/O, threading, networking, reflection, serialization, and fundamental types. It provides consistent programming model across languages.',
+        sources: ['Microsoft .NET API Reference', '.NET Base Class Library Documentation']
+      },
+      {
+        name: 'Garbage Collector',
+        type: 'COMPONENT',
+        description: 'Automatic memory management system that reclaims memory from unreferenced objects.',
+        details: 'The GC uses generational collection (Gen 0, 1, 2) and various modes including workstation and server GC. It helps prevent memory leaks and improves application performance.',
+        sources: ['Microsoft GC Documentation', '.NET Memory Management Guide']
+      },
+      {
+        name: 'LINQ',
+        type: 'FEATURE',
+        description: 'Language Integrated Query provides native query capabilities for collections and data sources.',
+        details: 'LINQ enables SQL-like queries directly in C# and VB.NET. It supports query syntax and method syntax, working with IEnumerable and IQueryable interfaces.',
+        sources: ['Microsoft LINQ Documentation', 'C# Programming Guide']
+      },
+      {
+        name: 'ASP.NET Core',
+        type: 'FRAMEWORK',
+        description: 'Cross-platform, high-performance framework for building modern web applications and APIs.',
+        details: 'ASP.NET Core supports MVC, Razor Pages, Blazor, and Web APIs. It features built-in dependency injection, middleware pipeline, and excellent performance.',
+        sources: ['Microsoft ASP.NET Core Documentation', 'ASP.NET Core Fundamentals']
+      }
     ],
     'AI': [
-      { name: 'Machine Learning', type: 'CONCEPT', description: 'Algorithms that learn from data' },
-      { name: 'Neural Networks', type: 'ARCHITECTURE', description: 'Brain-inspired computing models' },
-      { name: 'Natural Language Processing', type: 'FIELD', description: 'AI for understanding text' },
-      { name: 'Computer Vision', type: 'FIELD', description: 'AI for understanding images' },
-      { name: 'Reinforcement Learning', type: 'METHOD', description: 'Learning through rewards' },
-      { name: 'Large Language Models', type: 'MODEL', description: 'AI models trained on text' }
+      {
+        name: 'Machine Learning',
+        type: 'CONCEPT',
+        description: 'Branch of AI that enables systems to learn and improve from experience without explicit programming.',
+        details: 'ML algorithms build mathematical models based on training data to make predictions or decisions. Includes supervised, unsupervised, and reinforcement learning paradigms.',
+        sources: ['Pattern Recognition and Machine Learning - Bishop', 'The Elements of Statistical Learning', 'Google AI Research Papers']
+      },
+      {
+        name: 'Neural Networks',
+        type: 'ARCHITECTURE',
+        description: 'Computing systems inspired by biological neural networks that process information using interconnected nodes.',
+        details: 'Composed of layers of artificial neurons with weighted connections. Learns through backpropagation and gradient descent. Foundation for deep learning.',
+        sources: ['Deep Learning - Ian Goodfellow', 'Neural Networks and Deep Learning - Michael Nielsen', 'MIT Deep Learning Course']
+      },
+      {
+        name: 'Natural Language Processing',
+        type: 'FIELD',
+        description: 'AI field focused on enabling computers to understand, interpret, and generate human language.',
+        details: 'Combines computational linguistics with machine learning. Includes tasks like tokenization, parsing, sentiment analysis, machine translation, and question answering.',
+        sources: ['Speech and Language Processing - Jurafsky & Martin', 'Stanford NLP Course', 'ACL Conference Proceedings']
+      },
+      {
+        name: 'Computer Vision',
+        type: 'FIELD',
+        description: 'Field that enables computers to extract meaningful information from digital images and videos.',
+        details: 'Uses convolutional neural networks for tasks like image classification, object detection, segmentation, and facial recognition. Key architectures include ResNet, YOLO, and Vision Transformers.',
+        sources: ['Computer Vision: Algorithms and Applications - Szeliski', 'CS231n Stanford Course', 'CVPR Conference Papers']
+      },
+      {
+        name: 'Reinforcement Learning',
+        type: 'METHOD',
+        description: 'Learning paradigm where agents learn optimal behavior through trial and error interactions with an environment.',
+        details: 'Based on reward signals and the goal of maximizing cumulative reward. Key concepts include policies, value functions, and Q-learning. Used in game playing, robotics, and autonomous systems.',
+        sources: ['Reinforcement Learning: An Introduction - Sutton & Barto', 'DeepMind Research Papers', 'OpenAI Gym Documentation']
+      },
+      {
+        name: 'Large Language Models',
+        type: 'MODEL',
+        description: 'Massive neural networks trained on vast text corpora to understand and generate human-like text.',
+        details: 'Transformer-based architectures with billions of parameters. Examples include GPT, BERT, and T5. Capable of few-shot learning, reasoning, and diverse language tasks.',
+        sources: ['Attention Is All You Need Paper', 'OpenAI GPT Papers', 'Google BERT Research', 'Anthropic Research Publications']
+      }
     ],
     'Hot Peppers': [
-      { name: 'Capsaicin', type: 'COMPOUND', description: 'Chemical that makes peppers hot' },
-      { name: 'Scoville Scale', type: 'MEASUREMENT', description: 'Scale for measuring pepper heat' },
-      { name: 'Carolina Reaper', type: 'VARIETY', description: 'Currently hottest known pepper' },
-      { name: 'Habanero', type: 'VARIETY', description: 'Popular hot pepper variety' },
-      { name: 'Jalapeño', type: 'VARIETY', description: 'Mild to moderate hot pepper' },
-      { name: 'Ghost Pepper', type: 'VARIETY', description: 'Very hot pepper variety' }
+      {
+        name: 'Capsaicin',
+        type: 'COMPOUND',
+        description: 'Active compound in chili peppers that produces the burning sensation and binds to pain receptors.',
+        details: 'Chemical formula C18H27NO3. Hydrophobic molecule that binds to TRPV1 receptors. Used medicinally for pain relief and has antimicrobial properties.',
+        sources: ['Journal of Food Science', 'Pharmacological Reviews', 'Chile Pepper Institute Research']
+      },
+      {
+        name: 'Scoville Scale',
+        type: 'MEASUREMENT',
+        description: 'Measurement of pungency (spiciness) of chili peppers based on capsaicinoid concentration.',
+        details: 'Developed by Wilbur Scoville in 1912. Originally used organoleptic test, now measured using chromatography. Ranges from 0 (bell pepper) to over 3 million SHU.',
+        sources: ['American Spice Trade Association', 'Journal of Chromatography', 'Scoville Organoleptic Test Paper']
+      },
+      {
+        name: 'Carolina Reaper',
+        type: 'VARIETY',
+        description: 'World record holder for hottest pepper, averaging 1.64 million Scoville Heat Units.',
+        details: 'Developed by Ed Currie of PuckerButt Pepper Company. Cross between Pakistani Naga and Red Habanero. Guinness World Record holder since 2013.',
+        sources: ['Guinness World Records', 'PuckerButt Pepper Company', 'Chile Pepper Magazine']
+      },
+      {
+        name: 'Habanero',
+        type: 'VARIETY',
+        description: 'Extremely hot pepper variety ranging from 100,000 to 350,000 SHU, originally from the Amazon.',
+        details: 'Named after Havana (La Habana). Popular in Caribbean and Mexican cuisine. Contains high levels of capsaicin and vitamin C. Comes in various colors.',
+        sources: ['International Journal of Food Sciences', 'Caribbean Agricultural Research', 'Mexico Agricultural Department']
+      },
+      {
+        name: 'Jalapeño',
+        type: 'VARIETY',
+        description: 'Medium-hot pepper (2,500-8,000 SHU) widely used in Mexican cuisine and popular worldwide.',
+        details: 'Named after Xalapa, Veracruz. Most popular chili in the US. When smoked and dried becomes chipotle. Rich in vitamins A, C, and potassium.',
+        sources: ['USDA Agricultural Research Service', 'Mexican Culinary Institute', 'Journal of Agricultural and Food Chemistry']
+      },
+      {
+        name: 'Ghost Pepper',
+        type: 'VARIETY',
+        description: 'Bhut jolokia from India, over 1 million SHU, formerly the world\'s hottest pepper.',
+        details: 'Native to Northeast India, particularly Assam. Used as elephant deterrent and in military grade pepper spray. Held world record from 2007-2011.',
+        sources: ['Defence Research and Development Organisation India', 'Asian Journal of Chemistry', 'New Mexico State University Chile Pepper Institute']
+      }
     ]
   };
 
@@ -551,7 +745,9 @@ async function generateKnowledgeNodes(topic, prompt) {
     template = words.slice(0, 6).map((word, index) => ({
       name: word.charAt(0).toUpperCase() + word.slice(1),
       type: 'CONCEPT',
-      description: `Concept related to ${word}`
+      description: `Concept related to ${word}`,
+      details: `This is a key concept in the context of ${topic}. Further research needed to expand this knowledge.`,
+      sources: ['User Research', 'Domain Knowledge Base', `${topic} Documentation`]
     }));
   }
 

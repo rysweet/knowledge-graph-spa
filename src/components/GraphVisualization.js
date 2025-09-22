@@ -11,7 +11,7 @@ cytoscape.use(coseBilkent);
 const GraphVisualization = ({ data, onNodeSelect, highlightedNode, activeFilters = new Set() }) => {
   const cyRef = useRef(null);
   const [cy, setCy] = useState(null);
-  const [layout, setLayout] = useState('dagre');
+  const [layout, setLayout] = useState('cose-bilkent');
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Color scheme matching Azure design
@@ -24,6 +24,8 @@ const GraphVisualization = ({ data, onNodeSelect, highlightedNode, activeFilters
       'RULE': '#ff6b35',           // Rules/constraints (was CLAUSE)
       'METHOD': '#ffd23f',         // Methods/functions (was FUNCTION)
       'INSTANCE': '#ee6c4d',       // Specific instances (was SPECIAL_REGISTER)
+      'SOURCE': '#00bcf2',         // Source/reference nodes
+      'TOPIC': '#40e0d0',          // Topic nodes
       // Legacy mappings for backward compatibility
       'STATEMENT': '#0078d4',
       'DATA_TYPE': '#00bcf2',
@@ -41,6 +43,8 @@ const GraphVisualization = ({ data, onNodeSelect, highlightedNode, activeFilters
       'PRECEDES': '#0078d4',
       'CONTAINS': '#00bcf2',
       'ALTERNATIVE_TO': '#ff6b35',
+      'SOURCED_FROM': '#ff9900',   // Orange for source relationships
+      'RELATES_TO': '#9E9E9E',     // Gray for general relationships
     };
     return colors[type] || '#666';
   };
@@ -88,11 +92,13 @@ const GraphVisualization = ({ data, onNodeSelect, highlightedNode, activeFilters
         data: {
           id: node.id,
           label: node.label,
-          type: node.properties?.type || 'UNKNOWN',
+          type: node.properties?.type || node.type || 'UNKNOWN',
+          description: node.properties?.description || '',
+          details: node.properties?.details || '',
           properties: node.properties,
         },
         style: {
-          'background-color': getNodeColor(node.properties?.type),
+          'background-color': getNodeColor(node.properties?.type || node.type),
           'color': '#ffffff',
           'font-size': '10px',
           'text-wrap': 'wrap',
@@ -100,8 +106,8 @@ const GraphVisualization = ({ data, onNodeSelect, highlightedNode, activeFilters
           'width': 'label',
           'height': 'label',
           'padding': '8px',
-          'shape': 'round-rectangle',
-          'border-width': 1,
+          'shape': (node.properties?.type || node.type) === 'SOURCE' ? 'diamond' : 'round-rectangle',
+          'border-width': (node.properties?.type || node.type) === 'SOURCE' ? 2 : 1,
           'border-color': '#404040',
         }
       })),
@@ -271,13 +277,51 @@ const GraphVisualization = ({ data, onNodeSelect, highlightedNode, activeFilters
       newCy.on('tap', 'node', (event) => {
         const node = event.target;
         const nodeId = node.data('id');
+        const nodeData = node.data();
 
         // Clear previous selections
         newCy.elements().removeClass('selected');
         node.addClass('selected');
 
+        // Show node details in console for now
+        if (nodeData.description || nodeData.details) {
+          console.log('Node Details:', {
+            name: nodeData.label,
+            type: nodeData.type,
+            description: nodeData.description,
+            details: nodeData.details
+          });
+        }
+
         if (onNodeSelect) {
           onNodeSelect(nodeId);
+        }
+      });
+
+      // Add hover tooltip for node details
+      newCy.on('mouseover', 'node', (event) => {
+        const node = event.target;
+        const nodeData = node.data();
+
+        if (nodeData.description) {
+          // Update the node's label temporarily to show description
+          node.data('originalLabel', nodeData.label);
+          const tooltipText = `${nodeData.label}\n${nodeData.description}`;
+          node.style('font-size', '12px');
+          node.style('text-wrap', 'wrap');
+          node.style('text-max-width', '150px');
+        }
+      });
+
+      newCy.on('mouseout', 'node', (event) => {
+        const node = event.target;
+        const originalLabel = node.data('originalLabel');
+
+        if (originalLabel) {
+          node.style('font-size', '10px');
+          node.style('text-wrap', 'wrap');
+          node.style('text-max-width', '80px');
+          node.data('originalLabel', null);
         }
       });
 
