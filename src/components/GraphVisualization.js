@@ -283,18 +283,43 @@ const GraphVisualization = ({ data, onNodeSelect, highlightedNode, activeFilters
         newCy.elements().removeClass('selected');
         node.addClass('selected');
 
+        // Get connected nodes (neighbors)
+        const connectedEdges = node.connectedEdges();
+        const neighbors = [];
+
+        connectedEdges.forEach(edge => {
+          const source = edge.source();
+          const target = edge.target();
+          const neighborNode = source.id() === nodeId ? target : source;
+          const isOutgoing = source.id() === nodeId;
+
+          neighbors.push({
+            id: neighborNode.id(),
+            label: neighborNode.data('label'),
+            type: neighborNode.data('type'),
+            properties: neighborNode.data('properties'),
+            relationship: {
+              type: edge.data('label') || edge.data('type'),
+              direction: isOutgoing ? 'outgoing' : 'incoming',
+              properties: edge.data('properties')
+            }
+          });
+        });
+
         // Show node details in console for now
         if (nodeData.description || nodeData.details) {
           console.log('Node Details:', {
             name: nodeData.label,
             type: nodeData.type,
             description: nodeData.description,
-            details: nodeData.details
+            details: nodeData.details,
+            neighbors: neighbors
           });
         }
 
         if (onNodeSelect) {
-          onNodeSelect(nodeId);
+          // Pass complete node data and neighbors
+          onNodeSelect(nodeId, nodeData, neighbors);
         }
       });
 

@@ -26,6 +26,7 @@ import {
 import GraphVisualization from './GraphVisualization';
 import GraphDebug from './GraphDebug';
 import EntityDetails from './EntityDetails';
+import NodeDetailsPanel from './NodeDetailsPanel';
 
 const VisualizeTab = ({
   graphData,
@@ -38,6 +39,9 @@ const VisualizeTab = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState(new Set());
+  const [detailsPanelOpen, setDetailsPanelOpen] = useState(false);
+  const [selectedNodeDetails, setSelectedNodeDetails] = useState(null);
+  const [selectedNodeNeighbors, setSelectedNodeNeighbors] = useState([]);
 
   // Entity types with colors matching Azure design
   const nodeTypes = [
@@ -85,6 +89,28 @@ const VisualizeTab = ({
     }
     setActiveFilters(newFilters);
     // TODO: Implement filter logic in graph visualization
+  };
+
+  // Handle node selection from graph
+  const handleNodeClick = (nodeId, nodeData, neighbors) => {
+    console.log('Node clicked:', nodeId, nodeData);
+
+    // Set the node details for the panel
+    setSelectedNodeDetails(nodeData);
+    setSelectedNodeNeighbors(neighbors || []);
+
+    // Open the details panel
+    setDetailsPanelOpen(true);
+
+    // Call the original onNodeSelect if provided
+    if (onNodeSelect) {
+      onNodeSelect(nodeId);
+    }
+  };
+
+  // Handle closing the details panel
+  const handleClosePanel = () => {
+    setDetailsPanelOpen(false);
   };
 
   return (
@@ -416,11 +442,19 @@ const VisualizeTab = ({
 
         <GraphVisualization
           data={graphData}
-          onNodeSelect={onNodeSelect}
+          onNodeSelect={handleNodeClick}
           highlightedNode={graphData.highlightedNode}
           activeFilters={activeFilters}
         />
       </Box>
+
+      {/* Node Details Panel */}
+      <NodeDetailsPanel
+        open={detailsPanelOpen}
+        onClose={handleClosePanel}
+        nodeData={selectedNodeDetails}
+        neighbors={selectedNodeNeighbors}
+      />
     </Box>
   );
 };
