@@ -3,7 +3,32 @@
  * Initializes the logging system for the frontend
  */
 
-import { logger, LogLevel, type LogEntry } from '../../../shared/logger';
+// Simple logger implementation to replace Azure shared logger
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3
+}
+
+export interface LogEntry {
+  timestamp: Date;
+  level: LogLevel;
+  message: string;
+  data?: any;
+  component?: string;
+  metadata?: any;
+}
+
+export const logger = {
+  debug: (message: string, data?: any) => console.debug(message, data),
+  info: (message: string, data?: any) => console.info(message, data),
+  warn: (message: string, data?: any) => console.warn(message, data),
+  error: (message: string, data?: any) => console.error(message, data),
+  setLevel: (level: LogLevel) => { /* No-op */ },
+  addTransport: (transport: any) => { /* No-op */ },
+  child: (context: any) => logger  // Return self for child logger
+};
 
 // Memory transport to store logs for the LogsTab component
 class MemoryTransport {
@@ -292,8 +317,7 @@ export function replaceConsole(): void {
   };
 }
 
-// Export the main logger instance and types
-export { logger, LogLevel, type LogEntry };
+// Logger, LogLevel and LogEntry are already exported above
 
 // Also export as SystemLogEntry and SystemLogLevel for compatibility
 export type SystemLogEntry = LogEntry;

@@ -220,7 +220,7 @@ export class ResourceManager {
  * Hook for using ResourceManager in React components
  */
 export function useResourceManager(): ResourceManager {
-  const managerRef = React.useRef<ResourceManager>();
+  const managerRef = React.useRef<ResourceManager>(null as any);
   
   if (!managerRef.current) {
     managerRef.current = new ResourceManager();
