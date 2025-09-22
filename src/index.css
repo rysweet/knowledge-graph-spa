@@ -1,0 +1,366 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1e1e1e;
+  color: #cccccc;
+  overflow: hidden;
+}
+
+/* Spin animation for recovery indicators */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Force AppBar to be black */
+.MuiAppBar-root {
+  background-color: #000000 !important;
+  background-image: none !important;
+}
+
+.MuiAppBar-colorPrimary {
+  background-color: #000000 !important;
+  background-image: none !important;
+}
+
+.MuiToolbar-root {
+  background-color: #000000 !important;
+  background-image: none !important;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Custom scrollbar styles - more visible */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border: 1px solid #333;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4caf50;
+  border-radius: 6px;
+  border: 1px solid #2d2d30;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5cbf60;
+}
+
+::-webkit-scrollbar-corner {
+  background: #1a1a1a;
+}
+
+/* Monaco Editor styles */
+.monaco-editor {
+  font-family: 'Consolas', 'Courier New', monospace;
+}
+
+/* Log viewer styles */
+.log-viewer {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  background-color: #1e1e1e;
+  color: #cccccc;
+  padding: 8px;
+  overflow: auto;
+}
+
+.log-viewer .log-error {
+  color: #f44336;
+}
+
+.log-viewer .log-warning {
+  color: #ff9800;
+}
+
+.log-viewer .log-info {
+  color: #2196f3;
+}
+
+.log-viewer .log-success {
+  color: #4caf50;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Fade animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Tab panel transitions */
+.tab-panel {
+  animation: fadeIn 0.2s ease-in;
+}
+
+/* xterm.js terminal styles */
+.xterm {
+  padding: 10px;
+  height: 100%;
+}
+
+.xterm-viewport {
+  background-color: #1e1e1e !important;
+}
+
+.xterm-screen {
+  background-color: #1e1e1e !important;
+}
+
+/* vis-network navigation button styles - green on black theme */
+.vis-navigation {
+  background-color: #000000 !important;
+  border: 1px solid #4caf50 !important;
+  border-radius: 4px !important;
+}
+
+.vis-button {
+  background-color: #000000 !important;
+  background-image: none !important;
+  border: 1px solid #4caf50 !important;
+  color: #4caf50 !important;
+  border-radius: 4px !important;
+  margin: 2px !important;
+  padding: 4px 8px !important;
+  box-shadow: none !important;
+}
+
+.vis-button:hover {
+  background-color: #000000 !important;
+  background-image: none !important;
+  border-color: #4caf50 !important;
+  color: #4caf50 !important;
+  filter: brightness(1.2) !important;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5) !important;
+}
+
+.vis-button:active {
+  background-color: #000000 !important;
+  background-image: none !important;
+  border-color: #4caf50 !important;
+  color: #4caf50 !important;
+  box-shadow: none !important;
+}
+
+/* Vis-network built-in zoom and navigation controls */
+.vis-zoomExtends, .vis-zoomIn, .vis-zoomOut,
+.vis-up, .vis-down, .vis-left, .vis-right {
+  background-color: #000000 !important;
+  background-image: none !important;
+  border: 1px solid #4caf50 !important;
+  color: #4caf50 !important;
+  fill: #4caf50 !important;
+  stroke: #4caf50 !important;
+}
+
+.vis-zoomExtends:hover, .vis-zoomIn:hover, .vis-zoomOut:hover,
+.vis-up:hover, .vis-down:hover, .vis-left:hover, .vis-right:hover {
+  background-color: #000000 !important;
+  background-image: none !important;
+  border-color: #4caf50 !important;
+  color: #4caf50 !important;
+  fill: #4caf50 !important;
+  stroke: #4caf50 !important;
+  filter: brightness(1.2) !important;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5) !important;
+}
+
+/* Override any SVG or Canvas styling in vis-network buttons */
+.vis-navigation .vis-button div {
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: #4caf50 !important;
+}
+
+.vis-navigation .vis-button:before,
+.vis-navigation .vis-button:after {
+  background-color: #4caf50 !important;
+  border-color: #4caf50 !important;
+}
+
+/* Force icon colors in navigation buttons */
+.vis-navigation .vis-button.vis-up:after,
+.vis-navigation .vis-button.vis-down:after,
+.vis-navigation .vis-button.vis-left:after,
+.vis-navigation .vis-button.vis-right:after,
+.vis-navigation .vis-button.vis-zoomIn:after,
+.vis-navigation .vis-button.vis-zoomOut:after,
+.vis-navigation .vis-button.vis-zoomExtends:after {
+  border-color: #4caf50 !important;
+  background-color: transparent !important;
+}
+
+/* Override default vis-network button images/sprites */
+.vis-navigation .vis-button.vis-up {
+  background-image: none !important;
+}
+.vis-navigation .vis-button.vis-up:after {
+  content: '▲';
+  color: #4caf50 !important;
+  font-size: 16px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.vis-navigation .vis-button.vis-down {
+  background-image: none !important;
+}
+.vis-navigation .vis-button.vis-down:after {
+  content: '▼';
+  color: #4caf50 !important;
+  font-size: 16px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.vis-navigation .vis-button.vis-left {
+  background-image: none !important;
+}
+.vis-navigation .vis-button.vis-left:after {
+  content: '◀';
+  color: #4caf50 !important;
+  font-size: 16px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.vis-navigation .vis-button.vis-right {
+  background-image: none !important;
+}
+.vis-navigation .vis-button.vis-right:after {
+  content: '▶';
+  color: #4caf50 !important;
+  font-size: 16px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.vis-navigation .vis-button.vis-zoomIn {
+  background-image: none !important;
+}
+.vis-navigation .vis-button.vis-zoomIn:after {
+  content: '+';
+  color: #4caf50 !important;
+  font-size: 20px;
+  font-weight: bold;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.vis-navigation .vis-button.vis-zoomOut {
+  background-image: none !important;
+}
+.vis-navigation .vis-button.vis-zoomOut:after {
+  content: '−';
+  color: #4caf50 !important;
+  font-size: 20px;
+  font-weight: bold;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.vis-navigation .vis-button.vis-zoomExtends {
+  background-image: none !important;
+}
+.vis-navigation .vis-button.vis-zoomExtends:after {
+  content: '⊡';
+  color: #4caf50 !important;
+  font-size: 18px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Vis-network tooltip styles */
+.vis-tooltip {
+  position: absolute;
+  visibility: hidden;
+  padding: 8px;
+  white-space: normal;
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  font-size: 12px;
+  color: #ffffff;
+  background-color: #1a1a1a;
+  border: 1px solid #4caf50;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 10000;
+  max-width: 300px;
+}
+
+/* Tooltip content styles */
+.vis-tooltip-title {
+  font-weight: bold;
+  color: #4caf50;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.vis-tooltip-row {
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.vis-tooltip-hint {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #333;
+  font-size: 11px;
+  font-style: italic;
+  color: #888;
+}
