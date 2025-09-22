@@ -23,6 +23,30 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Knowledge Graph API is running' });
 });
 
+// Clear the entire database
+app.post('/api/clear-database', async (req, res) => {
+  console.log('Clear database request received');
+  const session = driver.session();
+
+  try {
+    // Delete all nodes and relationships
+    await session.run('MATCH (n) DETACH DELETE n');
+    console.log('Database cleared successfully');
+    res.json({
+      success: true,
+      message: 'Database cleared successfully'
+    });
+  } catch (error) {
+    console.error('Error clearing database:', error);
+    res.status(500).json({
+      error: 'Failed to clear database',
+      details: error.message
+    });
+  } finally {
+    await session.close();
+  }
+});
+
 // Graph status endpoint - check if database has data
 app.get('/api/graph/status', async (req, res) => {
   const session = driver.session();
