@@ -43,7 +43,7 @@ const SearchPanel = ({ onSearch, searchResults, onResultSelect, nodeTypes }) => 
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Search COBOL Entities
+        Search Entities
       </Typography>
 
       {/* Search Input */}

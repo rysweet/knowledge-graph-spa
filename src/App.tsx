@@ -13,7 +13,7 @@ import { errorService } from './services/errorService';
 
 // Lazy load all tab components
 const StatusTab = lazy(() => import('./components/tabs/StatusTab'));
-const ScanTab = lazy(() => import('./components/tabs/ScanTab'));
+const BuildKnowledgeTab = lazy(() => import('./components/tabs/BuildKnowledgeTab'));
 const VisualizeTab = lazy(() => import('./components/tabs/VisualizeTab'));
 
 const App: React.FC = () => {
@@ -66,8 +66,8 @@ const App: React.FC = () => {
       dispatch({ type: 'SET_ACTIVE_TAB', payload: 'visualize' });
     } else if (!initialCheckDone && dbPopulated === false) {
       setInitialCheckDone(true);
-      navigate('/scan');
-      dispatch({ type: 'SET_ACTIVE_TAB', payload: 'scan' });
+      navigate('/build-knowledge');
+      dispatch({ type: 'SET_ACTIVE_TAB', payload: 'build-knowledge' });
     }
   }, [dbPopulated, navigate, dispatch, initialCheckDone]);
 
@@ -126,11 +126,13 @@ const App: React.FC = () => {
                     <StatusTab />
                   </TabErrorBoundary>
                 } />
-                <Route path="/scan" element={
-                  <TabErrorBoundary tabName="Scan">
-                    <ScanTab />
+                <Route path="/build-knowledge" element={
+                  <TabErrorBoundary tabName="Build Knowledge">
+                    <BuildKnowledgeTab />
                   </TabErrorBoundary>
                 } />
+                {/* Legacy route redirect */}
+                <Route path="/scan" element={<Navigate to="/build-knowledge" replace />} />
                 <Route path="/visualize" element={
                   <TabErrorBoundary tabName="Visualize">
                     <VisualizeTab />

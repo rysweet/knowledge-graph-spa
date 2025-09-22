@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 
 import GraphVisualization from './GraphVisualization';
+import GraphDebug from './GraphDebug';
 import EntityDetails from './EntityDetails';
 
 const VisualizeTab = ({
@@ -38,8 +39,17 @@ const VisualizeTab = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState(new Set());
 
-  // COBOL entity types with colors matching Azure design
+  // Entity types with colors matching Azure design
   const nodeTypes = [
+    // Generic types
+    { type: 'CONCEPT', color: '#0078d4', count: stats?.nodeTypes?.find(nt => nt.type === 'CONCEPT')?.count || 0 },
+    { type: 'PROPERTY', color: '#00bcf2', count: stats?.nodeTypes?.find(nt => nt.type === 'PROPERTY')?.count || 0 },
+    { type: 'CATEGORY', color: '#40e0d0', count: stats?.nodeTypes?.find(nt => nt.type === 'CATEGORY')?.count || 0 },
+    { type: 'SUBCATEGORY', color: '#7b68ee', count: stats?.nodeTypes?.find(nt => nt.type === 'SUBCATEGORY')?.count || 0 },
+    { type: 'RULE', color: '#ff6b35', count: stats?.nodeTypes?.find(nt => nt.type === 'RULE')?.count || 0 },
+    { type: 'METHOD', color: '#ffd23f', count: stats?.nodeTypes?.find(nt => nt.type === 'METHOD')?.count || 0 },
+    { type: 'INSTANCE', color: '#ee6c4d', count: stats?.nodeTypes?.find(nt => nt.type === 'INSTANCE')?.count || 0 },
+    // Legacy COBOL types (for backward compatibility)
     { type: 'STATEMENT', color: '#0078d4', count: stats?.nodeTypes?.find(nt => nt.type === 'STATEMENT')?.count || 0 },
     { type: 'DATA_TYPE', color: '#00bcf2', count: stats?.nodeTypes?.find(nt => nt.type === 'DATA_TYPE')?.count || 0 },
     { type: 'DIVISION', color: '#40e0d0', count: stats?.nodeTypes?.find(nt => nt.type === 'DIVISION')?.count || 0 },
@@ -47,7 +57,7 @@ const VisualizeTab = ({
     { type: 'CLAUSE', color: '#ff6b35', count: stats?.nodeTypes?.find(nt => nt.type === 'CLAUSE')?.count || 0 },
     { type: 'FUNCTION', color: '#ffd23f', count: stats?.nodeTypes?.find(nt => nt.type === 'FUNCTION')?.count || 0 },
     { type: 'SPECIAL_REGISTER', color: '#ee6c4d', count: stats?.nodeTypes?.find(nt => nt.type === 'SPECIAL_REGISTER')?.count || 0 }
-  ];
+  ].filter(nt => nt.count > 0); // Only show types that have nodes
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -133,7 +143,7 @@ const VisualizeTab = ({
           <TextField
             fullWidth
             size="small"
-            placeholder="Search COBOL entities..."
+            placeholder="Search entities..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -207,10 +217,10 @@ const VisualizeTab = ({
                         }
                         secondary={
                           <Chip
-                            label={node.type}
+                            label={node.properties?.type || 'UNKNOWN'}
                             size="small"
                             sx={{
-                              bgcolor: nodeTypes.find(nt => nt.type === node.type)?.color || '#666666',
+                              bgcolor: nodeTypes.find(nt => nt.type === node.properties?.type)?.color || '#666666',
                               color: '#000000',
                               fontSize: '0.75rem',
                               height: 20

@@ -70,7 +70,7 @@ const Header: React.FC = () => {
           fontWeight: 500,
         }}
       >
-        Azure Tenant Grapher
+        Knowledge Graph
       </Typography>
 
       <Box
