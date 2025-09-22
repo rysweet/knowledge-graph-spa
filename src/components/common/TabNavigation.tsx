@@ -9,18 +9,8 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Dashboard as StatusIcon,
-  BugReport as LogsIcon,
   Search as ScanIcon,
   Visibility as VisualizeIcon,
-  Description as SpecIcon,
-  Code as CodeIcon,
-  Delete as DeleteIcon,
-  AddCircle as CreateIcon,
-  Psychology as AgentIcon,
-  Security as ThreatIcon,
-  Settings as ConfigIcon,
-  Terminal as TerminalIcon,
-  MenuBook as DocsIcon,
 } from '@mui/icons-material';
 
 // All tabs in a simple flat array
@@ -28,16 +18,6 @@ const allTabs = [
   { label: 'Status', path: '/status', icon: <StatusIcon /> },
   { label: 'Scan', path: '/scan', icon: <ScanIcon /> },
   { label: 'Visualize', path: '/visualize', icon: <VisualizeIcon /> },
-  { label: 'Export Spec', path: '/generate-spec', icon: <SpecIcon /> },
-  { label: 'Generate IaC', path: '/generate-iac', icon: <CodeIcon /> },
-  { label: 'Undeploy', path: '/undeploy', icon: <DeleteIcon /> },
-  { label: 'Create Tenant', path: '/create-tenant', icon: <CreateIcon /> },
-  { label: 'Agent Mode', path: '/agent-mode', icon: <AgentIcon /> },
-  { label: 'Threat Model', path: '/threat-model', icon: <ThreatIcon /> },
-  { label: 'Docs', path: '/docs', icon: <DocsIcon /> },
-  { label: 'Logs', path: '/logs', icon: <LogsIcon /> },
-  { label: 'CLI', path: '/cli', icon: <TerminalIcon /> },
-  { label: 'Config', path: '/config', icon: <ConfigIcon /> },
 ];
 
 const TabNavigation: React.FC = () => {

@@ -24,11 +24,11 @@ import {
   Update as UpdateIcon,
 } from '@mui/icons-material';
 import axios from 'axios';
-import { io, Socket } from 'socket.io-client';
+// import { io, Socket } from 'socket.io-client'; // Removed Azure WebSocket dependency
 import LogViewer from '../common/LogViewer';
 import { useApp } from '../../context/AppContext';
 import { useBackgroundOperations } from '../../hooks/useBackgroundOperations';
-import { useWebSocket } from '../../hooks/useWebSocket';
+// import { useWebSocket } from '../../hooks/useWebSocket'; // Removed Azure WebSocket dependency
 import { useLogger } from '../../hooks/useLogger';
 import { isValidTenantId, isValidResourceLimit, isValidThreadCount } from '../../utils/validation';
 
@@ -47,7 +47,11 @@ interface DBStats {
 const ScanTab: React.FC = () => {
   const { state, dispatch } = useApp();
   const { addBackgroundOperation, updateBackgroundOperation, removeBackgroundOperation } = useBackgroundOperations();
-  const { isConnected, subscribeToProcess, unsubscribeFromProcess, getProcessOutput } = useWebSocket();
+  // WebSocket functionality removed - using polling instead
+  const isConnected = true; // Assume connected for now
+  const subscribeToProcess = (processId: string) => { /* No-op */ };
+  const unsubscribeFromProcess = (processId: string) => { /* No-op */ };
+  const getProcessOutput = (processId: string) => null;
   const logger = useLogger('Scan');
 
   // State declarations
@@ -65,7 +69,7 @@ const ScanTab: React.FC = () => {
   const [currentProcessId, setCurrentProcessId] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
-  const [processSocket, setProcessSocket] = useState<Socket | null>(null);
+  // const [processSocket, setProcessSocket] = useState<Socket | null>(null); // WebSocket removed
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
@@ -302,6 +306,8 @@ const ScanTab: React.FC = () => {
     }
   }, [isConnected, dispatch]);
 
+  // WebSocket connection removed - using polling instead
+  /*
   // Set up dedicated Socket.IO connection for process events
   useEffect(() => {
     if (!isConnected || processSocket) {
@@ -324,6 +330,7 @@ const ScanTab: React.FC = () => {
       setProcessSocket(null);
     };
   }, [isConnected, handleProcessExit, handleProcessError]);
+  */
 
   // Monitor process output in real-time
   useEffect(() => {

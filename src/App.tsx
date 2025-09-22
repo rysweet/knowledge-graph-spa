@@ -15,16 +15,6 @@ import { errorService } from './services/errorService';
 const StatusTab = lazy(() => import('./components/tabs/StatusTab'));
 const ScanTab = lazy(() => import('./components/tabs/ScanTab'));
 const VisualizeTab = lazy(() => import('./components/tabs/VisualizeTab'));
-const AgentModeTab = lazy(() => import('./components/tabs/AgentModeTab'));
-const ConfigTab = lazy(() => import('./components/tabs/ConfigTab'));
-const GenerateSpecTab = lazy(() => import('./components/tabs/GenerateSpecTab'));
-const GenerateIaCTab = lazy(() => import('./components/tabs/GenerateIaCTab'));
-const UndeployTab = lazy(() => import('./components/tabs/UndeployTab'));
-const CreateTenantTab = lazy(() => import('./components/tabs/CreateTenantTab'));
-const ThreatModelTab = lazy(() => import('./components/tabs/ThreatModelTab'));
-const DocsTab = lazy(() => import('./components/tabs/DocsTab'));
-const LogsTab = lazy(() => import('./components/tabs/LogsTab'));
-const CLITab = lazy(() => import('./components/tabs/CLITab'));
 
 const App: React.FC = () => {
   const { dispatch } = useApp();
@@ -144,56 +134,6 @@ const App: React.FC = () => {
                 <Route path="/visualize" element={
                   <TabErrorBoundary tabName="Visualize">
                     <VisualizeTab />
-                  </TabErrorBoundary>
-                } />
-                <Route path="/generate-spec" element={
-                  <TabErrorBoundary tabName="Export Spec">
-                    <GenerateSpecTab />
-                  </TabErrorBoundary>
-                } />
-                <Route path="/generate-iac" element={
-                  <TabErrorBoundary tabName="Generate IaC">
-                    <GenerateIaCTab />
-                  </TabErrorBoundary>
-                } />
-                <Route path="/undeploy" element={
-                  <TabErrorBoundary tabName="Undeploy">
-                    <UndeployTab />
-                  </TabErrorBoundary>
-                } />
-                <Route path="/create-tenant" element={
-                  <TabErrorBoundary tabName="Create Tenant">
-                    <CreateTenantTab />
-                  </TabErrorBoundary>
-                } />
-                <Route path="/agent-mode" element={
-                  <TabErrorBoundary tabName="Agent Mode">
-                    <AgentModeTab />
-                  </TabErrorBoundary>
-                } />
-                <Route path="/threat-model" element={
-                  <TabErrorBoundary tabName="Threat Model">
-                    <ThreatModelTab />
-                  </TabErrorBoundary>
-                } />
-                <Route path="/docs" element={
-                  <TabErrorBoundary tabName="Docs">
-                    <DocsTab />
-                  </TabErrorBoundary>
-                } />
-                <Route path="/logs" element={
-                  <TabErrorBoundary tabName="Logs">
-                    <LogsTab />
-                  </TabErrorBoundary>
-                } />
-                <Route path="/cli" element={
-                  <TabErrorBoundary tabName="CLI">
-                    <CLITab />
-                  </TabErrorBoundary>
-                } />
-                <Route path="/config" element={
-                  <TabErrorBoundary tabName="Configuration">
-                    <ConfigTab />
                   </TabErrorBoundary>
                 } />
               </Routes>
