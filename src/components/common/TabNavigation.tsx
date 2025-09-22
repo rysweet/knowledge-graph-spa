@@ -9,14 +9,14 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Dashboard as StatusIcon,
-  Search as ScanIcon,
+  AutoAwesome as BuildKnowledgeIcon,
   Visibility as VisualizeIcon,
 } from '@mui/icons-material';
 
 // All tabs in a simple flat array
 const allTabs = [
   { label: 'Status', path: '/status', icon: <StatusIcon /> },
-  { label: 'Scan', path: '/scan', icon: <ScanIcon /> },
+  { label: 'Build Knowledge', path: '/build-knowledge', icon: <BuildKnowledgeIcon /> },
   { label: 'Visualize', path: '/visualize', icon: <VisualizeIcon /> },
 ];
 

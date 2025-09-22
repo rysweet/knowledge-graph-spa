@@ -5,6 +5,16 @@ node_modules/
 # Testing
 coverage/
 test-results/
+playwright-report/
+test-output/
+
+# Screenshots and temp files
+*.png
+*.jpg
+*.jpeg
+*.gif
+!public/images/**
+!docs/reports/**
 
 # Production
 build/
@@ -20,6 +30,15 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Temporary files
+*.tmp
+*.temp
+*_backup
+*_old
+*.bak
+scratch.*
+temp_*
 
 # Logs
 npm-debug.log*

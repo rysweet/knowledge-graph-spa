@@ -119,7 +119,7 @@ const StatusBar: React.FC<StatusBarProps> = ({ connectionStatus }) => {
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Typography variant="caption" color="text.secondary">
-          Azure Tenant Grapher v1.0.0
+          Knowledge Graph v1.0.0
         </Typography>
 
         {/* Tenant Information */}
