@@ -161,27 +161,42 @@ const GraphVisualization = ({ data, onNodeSelect, highlightedNode, activeFilters
 
       // Force fit after layout using timeout approach
       const fitExistingGraph = () => {
-        cy.fit(cy.nodes(), 50);
-
-        const extent = cy.extent();
-        const viewportWidth = extent.x2 - extent.x1;
-        const viewportHeight = extent.y2 - extent.y1;
-
-        if (viewportWidth > container.offsetWidth || viewportHeight > container.offsetHeight) {
-          const zoomLevel = Math.min(
-            container.offsetWidth / viewportWidth,
-            container.offsetHeight / viewportHeight
-          ) * 0.8;
-
-          cy.zoom(zoomLevel);
-          cy.center();
+        // Check if cytoscape instance is still valid
+        if (!cy || !cy._private || !cy._private.renderer) {
+          console.log('GraphVisualization: Existing cytoscape instance not available');
+          return;
         }
 
-        // Force render
-        cy.resize();
+        if (!cyRef.current) {
+          console.log('GraphVisualization: Container ref not available for existing graph');
+          return;
+        }
 
-        // Trigger a style update to force redraw
-        cy.style().update();
+        try {
+          cy.fit(cy.nodes(), 50);
+
+          const extent = cy.extent();
+          const viewportWidth = extent.x2 - extent.x1;
+          const viewportHeight = extent.y2 - extent.y1;
+
+          if (viewportWidth > container.offsetWidth || viewportHeight > container.offsetHeight) {
+            const zoomLevel = Math.min(
+              container.offsetWidth / viewportWidth,
+              container.offsetHeight / viewportHeight
+            ) * 0.8;
+
+            cy.zoom(zoomLevel);
+            cy.center();
+          }
+
+          // Force render
+          cy.resize();
+
+          // Trigger a style update to force redraw
+          cy.style().update();
+        } catch (error) {
+          console.error('GraphVisualization: Error in fitExistingGraph:', error);
+        }
       };
 
       setTimeout(fitExistingGraph, 0);
@@ -302,58 +317,73 @@ const GraphVisualization = ({ data, onNodeSelect, highlightedNode, activeFilters
 
       // Instead of relying on event, use promise and immediate fit
       const fitGraph = () => {
-        console.log('GraphVisualization: Fitting graph to container');
+        // Check if cytoscape instance is still valid
+        if (!newCy || !newCy._private || !newCy._private.renderer) {
+          console.log('GraphVisualization: Cytoscape instance not ready or destroyed');
+          return;
+        }
+
         const container = cyRef.current;
-
-        // First, fit all nodes
-        newCy.fit(newCy.nodes(), 50);
-
-        // Then check if we need additional zoom adjustment
-        const extent = newCy.extent();
-        console.log('Container size:', container.offsetWidth, 'x', container.offsetHeight);
-        console.log('Viewport after initial fit:', extent);
-
-        // Calculate the required zoom level to fit everything in view
-        const viewportWidth = extent.x2 - extent.x1;
-        const viewportHeight = extent.y2 - extent.y1;
-        const containerWidth = container.offsetWidth;
-        const containerHeight = container.offsetHeight;
-
-        if (viewportWidth > containerWidth || viewportHeight > containerHeight) {
-          // Calculate zoom to fit
-          const zoomLevel = Math.min(
-            containerWidth / viewportWidth,
-            containerHeight / viewportHeight
-          ) * 0.8; // 80% to ensure padding
-
-          console.log('GraphVisualization: Applying zoom level:', zoomLevel);
-          newCy.zoom(zoomLevel);
-          newCy.center();
+        if (!container) {
+          console.log('GraphVisualization: Container ref not available');
+          return;
         }
 
-        // Force a render/refresh
-        newCy.resize();
+        try {
+          console.log('GraphVisualization: Fitting graph to container');
 
-        // Trigger a style update to force redraw
-        newCy.style().update();
+          // First, fit all nodes
+          newCy.fit(newCy.nodes(), 50);
 
-        // Final check
-        const finalExtent = newCy.extent();
-        console.log('Final viewport:', finalExtent);
-        console.log('Nodes rendered:', newCy.nodes().length);
-        console.log('Edges rendered:', newCy.edges().length);
+          // Then check if we need additional zoom adjustment
+          const extent = newCy.extent();
+          console.log('Container size:', container.offsetWidth, 'x', container.offsetHeight);
+          console.log('Viewport after initial fit:', extent);
 
-        // Debug: Check if nodes are visible after fit
-        const firstNode = newCy.nodes().first();
-        if (firstNode.length > 0) {
-          const pos = firstNode.renderedPosition();
-          const boundingBox = firstNode.renderedBoundingBox();
-          console.log('First node rendered position:', pos);
-          console.log('First node bounding box:', boundingBox);
+          // Calculate the required zoom level to fit everything in view
+          const viewportWidth = extent.x2 - extent.x1;
+          const viewportHeight = extent.y2 - extent.y1;
+          const containerWidth = container.offsetWidth;
+          const containerHeight = container.offsetHeight;
+
+          if (viewportWidth > containerWidth || viewportHeight > containerHeight) {
+            // Calculate zoom to fit
+            const zoomLevel = Math.min(
+              containerWidth / viewportWidth,
+              containerHeight / viewportHeight
+            ) * 0.8; // 80% to ensure padding
+
+            console.log('GraphVisualization: Applying zoom level:', zoomLevel);
+            newCy.zoom(zoomLevel);
+            newCy.center();
+          }
+
+          // Force a render/refresh
+          newCy.resize();
+
+          // Trigger a style update to force redraw
+          newCy.style().update();
+
+          // Final check
+          const finalExtent = newCy.extent();
+          console.log('Final viewport:', finalExtent);
+          console.log('Nodes rendered:', newCy.nodes().length);
+          console.log('Edges rendered:', newCy.edges().length);
+
+          // Debug: Check if nodes are visible after fit
+          const firstNode = newCy.nodes().first();
+          if (firstNode.length > 0) {
+            const pos = firstNode.renderedPosition();
+            const boundingBox = firstNode.renderedBoundingBox();
+            console.log('First node rendered position:', pos);
+            console.log('First node bounding box:', boundingBox);
+          }
+
+          // Expose for debugging
+          window.debugCy = newCy;
+        } catch (error) {
+          console.error('GraphVisualization: Error in fitGraph:', error);
         }
-
-        // Expose for debugging
-        window.debugCy = newCy;
       };
 
       // Try to fit immediately and also after a delay to handle async layout
@@ -363,28 +393,43 @@ const GraphVisualization = ({ data, onNodeSelect, highlightedNode, activeFilters
 
       // Also add a longer delay in case container needs time to render
       setTimeout(() => {
-        console.log('GraphVisualization: Final render attempt');
+        // Check if cytoscape instance is still valid
+        if (!newCy || !newCy._private || !newCy._private.renderer) {
+          console.log('GraphVisualization: Cytoscape instance not available for final render');
+          return;
+        }
 
-        // Make absolutely sure the graph is visible
-        newCy.resize();
-        newCy.fit(newCy.nodes(), 50);
-        newCy.center();
+        if (!cyRef.current) {
+          console.log('GraphVisualization: Container ref not available for final render');
+          return;
+        }
 
-        // Force the graph to render by triggering viewport events
-        newCy.viewport({
-          zoom: newCy.zoom(),
-          pan: newCy.pan()
-        });
+        try {
+          console.log('GraphVisualization: Final render attempt');
 
-        // Update styles to force render
-        newCy.batch(() => {
-          newCy.nodes().forEach(node => {
-            node.style('opacity', 0.99);
-            node.style('opacity', 1);
+          // Make absolutely sure the graph is visible
+          newCy.resize();
+          newCy.fit(newCy.nodes(), 50);
+          newCy.center();
+
+          // Force the graph to render by triggering viewport events
+          newCy.viewport({
+            zoom: newCy.zoom(),
+            pan: newCy.pan()
           });
-        });
 
-        console.log('Final check - nodes visible:', newCy.nodes(':visible').length);
+          // Update styles to force render
+          newCy.batch(() => {
+            newCy.nodes().forEach(node => {
+              node.style('opacity', 0.99);
+              node.style('opacity', 1);
+            });
+          });
+
+          console.log('Final check - nodes visible:', newCy.nodes(':visible').length);
+        } catch (error) {
+          console.error('GraphVisualization: Error in final render attempt:', error);
+        }
       }, 1000);
 
       setIsInitialized(true);
